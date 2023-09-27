@@ -9,6 +9,8 @@ import compliance
 
 app = Flask(__name__)
 
+openai.api_key_path = "openai_api_key.txt"
+
 # FOR DEBUG 👇
 
 
@@ -47,4 +49,4 @@ def get_web_data():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,port=5123)
