@@ -6,7 +6,6 @@ from bs4 import BeautifulSoup
 from ast import literal_eval
 
 
-
 def can_fetch_robots(robots_url, user_agent, url_to_check):
     """Checks the robots.txt for permissions."""
     response = requests.get(robots_url)
@@ -83,7 +82,7 @@ def get_information_from_web(urls,data_request):
                      I need this data:\n{data_request}\nRead the text the user gives you and respond with the previous list with the information added. If the field is already full leave it or update it."""},
                      {"role": "user", "content": chunk}]
             )
-            data_request = f"Chunk {i+1} of {len(chunks)}\n"+response.choices[0].message['content']
+            data_request = f"Chunk {i+1} of {len(chunks)}\n" + response.choices[0].message['content']
             yield data_request
     return data_request
 
