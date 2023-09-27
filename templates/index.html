@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Cledara AI Invoice Recognition</title>
+  <link rel="stylesheet" href="static/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    *,
+    html {
+      margin: 0;
+      padding: 0;
+      font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+    }
+
+    td {
+      padding: 4px;
+    }
+
+    #app-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 1200px;
+      margin: auto;
+      align-items: center;
+    }
+
+    #logo {
+      text-align: center;
+      padding: 80px 0 64px 0;
+    }
+
+    #logo img {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .module {
+      border-radius: 5px;
+      padding: 10px;
+      margin: 0px 10px 16px 10px;
+      overflow-x: scroll;
+    }
+
+    /* remove scrollbar */
+    .module::-webkit-scrollbar {
+      display: none;
+    }
+
+    .module-name {
+      font-weight: 900;
+      font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+      padding: 0px 0px 12px 4px;
+    }
+
+    #image-container {
+      overflow: scroll;
+      max-height: 500px;
+      display: none;
+      margin-bottom: 42px;
+    }
+
+    table {
+      margin-bottom: 12px;
+    }
+
+    button {
+      font-size: 14px;
+      padding: 4px;
+    }
+
+    textarea {
+      padding: 6px;
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app-container">
+    <div id="logo">
+      <img src="static/logo.png" alt="logo" />
+    </div>
+    <div id="modules">
+      <div class="module" name="Input">
+        <input type="text" id="url" placeholder="URL" value="http://" />
+        <br><br>
+        <textarea id="prompt" rows="10" cols="80">
+Company website:
+Company Legal Name (e.g. Cledara Limited):
+Registered company address:
+URL of the privacy policy:
+URL of the Data Processing Addendum (DPA):
+Types of personal information the company collects (abbreviated):
+How can their Data Protection Officer (or the privacy department) be contacted?:
+When was the Privacy Policy Last Updated?:</textarea>
+        <br>
+        <br>
+        <!-- Botón de Subir factura (pdf)-->
+        <button id="crawl-btn">
+          Crawl
+        </button>
+        <!-- Upload multiple files -->
+
+      </div>
+
+      <div class="module" name="Log">
+        <!-- Log -->
+        <ul id="log"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    // Server URL
+    const url = 'http://localhost:5000/'
+    //const url = "http://34.68.132.80:5502/";
+
+    function logAction(action) {
+      let log = document.getElementById("log");
+      let li = document.createElement("li");
+      li.innerHTML = action;
+      log.prepend(li);
+      if (log.childElementCount > 5) {
+        log.removeChild(log.lastChild);
+      }
+    }
+
+    document.getElementById("crawl-btn").addEventListener("click", function () {
+      // empty log
+      document.getElementById("log").innerHTML = "";
+
+      // upload the PDF to the server
+
+      let promptValue = document.getElementById("prompt").value;
+      let urlValue = document.getElementById("url").value;
+      let data = {
+        url: urlValue,
+        prompt: promptValue
+      };
+
+      fetch('/get_web_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data),
+      })
+        .then(response => {
+          const reader = response.body.getReader();
+
+          function processStream() {
+            return reader.read().then(({ done, value }) => {
+              if (done) return;
+              const textChunk = new TextDecoder("utf-8").decode(value);
+              const messages = textChunk.split("\n").filter(Boolean);
+              messages.forEach(msg => {
+                const formattedMsg = msg.replace(/\\n/g, '<br>'); // Replacing literal "\n" string
+
+                console.log(formattedMsg);
+                logAction(formattedMsg);
+              });
+              return processStream();
+            });
+          }
+
+          return processStream();
+        })
+        .catch(error => {
+          console.error("Error fetching data:", error);
+        });
+    });
+
+
+
+
+
+
+  </script>
+</body>
+
+</html>
