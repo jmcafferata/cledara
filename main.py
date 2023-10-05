@@ -5,6 +5,7 @@ import requests
 timezone = pytz.timezone('America/Argentina/Buenos_Aires')
 import json
 import compliance
+from flask_cors import CORS
 
 
 app = Flask(__name__)
@@ -22,6 +23,10 @@ def index():
 
 
 from flask import Response
+
+# Enable CORS for the entire app. Alternatively, you can specify which routes you want CORS enabled for.
+CORS(app, resources={r"/*": {"origins": "https://cledara.com"}})
+
 
 @app.route('/get_web_data', methods=['POST'])
 def get_web_data():
