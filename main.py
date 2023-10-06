@@ -21,6 +21,12 @@ def index():
 
     return render_template('index.html')
 
+@app.route('/webhook', methods=['POST'])
+def webhook_listener():
+    data = request.json
+    # Here you can process the data as required.
+    print(data)
+    return jsonify(status="success"), 200
 
 from flask import Response
 
