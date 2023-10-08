@@ -31,7 +31,7 @@ def webhook_listener():
 from flask import Response
 
 # Enable CORS for the entire app. Alternatively, you can specify which routes you want CORS enabled for.
-CORS(app, resources={r"/*": {"origins": "https://cledara.com"}})
+CORS(app, resources={r"/*": {"origins": "https://www.cledara.com"}})
 
 
 @app.route('/get_web_data', methods=['POST'])
