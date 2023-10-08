@@ -34,7 +34,7 @@ from flask import Response
 CORS(app, resources={r"/*": {"origins": "https://www.cledara.com"}})
 
 
-@app.route('/get_web_data', methods=['POST'])
+@app.route('/get_web_data/', methods=['POST'])
 def get_web_data():
     try:
         data = request.get_json()
