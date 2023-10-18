@@ -65,6 +65,7 @@
 
     table {
       margin-bottom: 12px;
+      text-align: left;
     }
 
     button {
@@ -93,9 +94,9 @@ Company website:
 Company Legal Name (e.g. Cledara Limited):
 Company address:
 URL of the privacy policy:
-URL of the Data Processing Addendum (DPA):
+URL of the Data Processing Addendum (DPA) or subprocessors:
 Types of personal information the company collects (abbreviated):
-How can their Data Protection Officer (or the privacy department) be contacted?:
+How can their Data Protection Officer (or any privacy related email) be contacted?:
 When was the Privacy Policy Last Updated?:</textarea>
         <br>
         <br>
@@ -107,9 +108,9 @@ When was the Privacy Policy Last Updated?:</textarea>
 
       </div>
 
-      <div class="module" name="Log">
-        <!-- Log -->
-        <ul id="log"></ul>
+      <div id="log">
+
+
       </div>
     </div>
   </div>
@@ -121,19 +122,14 @@ When was the Privacy Policy Last Updated?:</textarea>
 
     function logAction(action) {
       let log = document.getElementById("log");
-      let li = document.createElement("li");
-      li.innerHTML = action;
-      log.prepend(li);
-      if (log.childElementCount > 5) {
-        log.removeChild(log.lastChild);
-      }
+
+      log.innerHTML = action
     }
 
     document.getElementById("crawl-btn").addEventListener("click", function () {
       // empty log
       document.getElementById("log").innerHTML = "";
 
-      // upload the PDF to the server
 
       let promptValue = document.getElementById("prompt").value;
       let urlValue = document.getElementById("url").value;
@@ -149,25 +145,9 @@ When was the Privacy Policy Last Updated?:</textarea>
         },
         body: JSON.stringify(data),
       })
-        .then(response => {
-          const reader = response.body.getReader();
-
-          function processStream() {
-            return reader.read().then(({ done, value }) => {
-              if (done) return;
-              const textChunk = new TextDecoder("utf-8").decode(value);
-              const messages = textChunk.split("\n").filter(Boolean);
-              messages.forEach(msg => {
-                const formattedMsg = msg.replace(/\\n/g, '<br>'); // Replacing literal "\n" string
-
-                console.log(formattedMsg);
-                logAction(formattedMsg);
-              });
-              return processStream();
-            });
-          }
-
-          return processStream();
+        .then(response => response.json())  // This is the change, parse the JSON from the response
+        .then(data => {
+          logAction(data.data);  // Now you can use `data.data` since your server sends data with a 'data' key
         })
         .catch(error => {
           console.error("Error fetching data:", error);

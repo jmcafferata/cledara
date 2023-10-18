@@ -10,7 +10,7 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 
-openai.api_key_path = "openai_api_key.txt"
+openai.api_key_path = "openaikey.txt"
 
 # FOR DEBUG 👇
 
@@ -50,12 +50,9 @@ def get_web_data():
         all_links = compliance.fetch_links_from_homepage(homepage_url)
         relevant_links = compliance.get_relevant_links_via_openai(homepage_url, all_links)
 
-        def generate_data():
-            for data_response in compliance.get_information_from_web(relevant_links, data_request):
-                yield json.dumps(data_response) + "\n"
+        data_response = compliance.get_information_from_web(relevant_links, data_request)
 
-        return Response(generate_data(), content_type="application/json")
-
+        return jsonify({"data": data_response}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
