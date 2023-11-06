@@ -62,37 +62,37 @@ def get_relevant_links_via_openai(homepage_url,links):
     print(response.choices[0].message['content'])
     return literal_eval(response.choices[0].message['content'])
 
-def get_information_from_web(urls,data_request):
-    for url in urls:
-        #get text from url
-        response = requests.get(url)
-        #get text from page using utf-8 
-        response.encoding = 'utf-8'
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        text = soup.get_text()
-        # split the text in chunks of 5000 characters
-        chunks = [text[i:i+10000] for i in range(0, len(text), 10000)]
-        for i, chunk in enumerate(chunks):
-            print(f"Chunk {i+1} of {len(chunks)}")
-            gdpr_response = openai.ChatCompletion.create(
-                model = 'gpt-3.5-turbo',
-                messages = [
-                    {"role": "system", "content": f"""
-                     I need this data:\n{data_request}\nRead the text the user gives you and respond with the previous list with the information added. If the field is already full leave it or update it."""},
-                     {"role": "user", "content": "Reading "+ url+ "\n"+chunk}]
-            )
-            data_request = gdpr_response.choices[0].message['content']
-            print(data_request)
+# def get_information_from_web(urls,data_request):
+#     for url in urls:
+#         #get text from url
+#         response = requests.get(url)
+#         #get text from page using utf-8 
+#         response.encoding = 'utf-8'
+#         response.raise_for_status()
+#         soup = BeautifulSoup(response.text, 'html.parser')
+#         text = soup.get_text()
+#         # split the text in chunks of 5000 characters
+#         chunks = [text[i:i+10000] for i in range(0, len(text), 10000)]
+#         for i, chunk in enumerate(chunks):
+#             print(f"Chunk {i+1} of {len(chunks)}")
+#             gdpr_response = openai.ChatCompletion.create(
+#                 model = 'gpt-3.5-turbo',
+#                 messages = [
+#                     {"role": "system", "content": f"""
+#                      I need this data:\n{data_request}\nRead the text the user gives you and respond with the previous list with the information added. If the field is already full leave it or update it."""},
+#                      {"role": "user", "content": "Reading "+ url+ "\n"+chunk}]
+#             )
+#             data_request = gdpr_response.choices[0].message['content']
+#             print(data_request)
 
-    final_response = openai.ChatCompletion.create(
-        model = 'gpt-3.5-turbo',
-        messages = [
-            {"role": "system", "content": "Convert this table into a nice html table, starting with <table> and ending with </table>"},
-                {"role": "user", "content": gdpr_response.choices[0].message['content']}]
-    )
-    print(final_response.choices[0].message['content'])
-    return final_response.choices[0].message['content']
+#     final_response = openai.ChatCompletion.create(
+#         model = 'gpt-3.5-turbo',
+#         messages = [
+#             {"role": "system", "content": "Convert this table into a nice html table, starting with <table> and ending with </table>"},
+#                 {"role": "user", "content": gdpr_response.choices[0].message['content']}]
+#     )
+#     print(final_response.choices[0].message['content'])
+#     return final_response.choices[0].message['content']
 
 # homepage_url = "https://tropicapp.io"
 # all_links = fetch_links_from_homepage(homepage_url)

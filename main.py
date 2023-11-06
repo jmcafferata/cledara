@@ -1,40 +1,56 @@
-from flask import Flask, render_template, request, jsonify, abort, Response
+from flask import Flask, render_template, request, jsonify
 import openai
-import pytz
-import requests
-timezone = pytz.timezone('America/Argentina/Buenos_Aires')
-import json
-import compliance
-from flask_cors import CORS
-
+import pandas as pd
+from openai.embeddings_utils import get_embedding
+import numpy as np
+from openai.embeddings_utils import cosine_similarity
+from pathlib import Path
 
 app = Flask(__name__)
 
-openai.api_key_path = "openaikey.txt"
+# get openai jkey from openaikey.txt
+openai.api_key = open('openaikey.txt', 'r').read()
 
-# FOR DEBUG 👇
 
 
-# Show index.html
-@app.route('/', methods=['GET'])
+# Your existing Python code for recommendations
+def get_recommendations(search_term):
+
+
+    THIS_FOLDER = Path(__file__).parent.resolve()
+    embeddings_file = THIS_FOLDER / "vendors_embeddings.csv"
+    df = pd.read_csv(embeddings_file)
+    search_term_vector = get_embedding(search_term, 'text-embedding-ada-002')
+
+    df['embedding'] = df['embedding'].apply(lambda x: x[1:-1].strip('()').split(','))
+    df['embedding'] = df['embedding'].apply(lambda x: [float(i) for i in x])
+
+    df['similarity'] = df['embedding'].apply(lambda x: cosine_similarity(x, search_term_vector))
+    df = df.sort_values(by=['similarity'], ascending=False)
+
+    return df[['Name', 'Description', 'Logo URL', 'Website URL']].head(10)
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
+    if request.method == 'POST':
+        search_term = request.form.get('search_term')
+        if search_term:  # Check if search_term is not None
+            recommendations = get_recommendations(search_term)
+            return jsonify(recommendations.to_dict(orient='records'))
+        else:
+            return jsonify({"error": "Invalid search term"})
 
     return render_template('index.html')
-
-@app.route('/webhook', methods=['POST'])
-def webhook_listener():
-    data = request.json
-    # Here you can process the data as required.
-    print(data)
-    return jsonify(status="success"), 200
-
-from flask import Response
-
+import compliance
+from flask_cors import CORS
 # Enable CORS for the entire app. Alternatively, you can specify which routes you want CORS enabled for.
 CORS(app, resources={r"/*": {"origins": "https://www.cledara.com"}})
 
+@app.route('/gdpr', methods=['GET'])
+def gdpr():
+    return render_template('gdpr.html')
 
-@app.route('/get_web_data/', methods=['POST'])
+@app.route('/get_web_data', methods=['POST'])
 def get_web_data():
     try:
         data = request.get_json()
@@ -56,5 +72,7 @@ def get_web_data():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+
 if __name__ == '__main__':
-    app.run(host="0.0.0.0",debug=True,port=5123)
+    app.run(debug=True)
